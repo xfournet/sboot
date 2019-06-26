@@ -1,8 +1,5 @@
-Function RequireAdmin {
-    If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")) {
-        Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" $PSCommandArgs" -Verb RunAs
-        Exit
-    }
+Function IsAdmin {
+    return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")
 }
 
 Function Restart {
@@ -19,9 +16,9 @@ Function KeyToValue($Key, $Values) {
 }
 
 Function EnsureRegistryKeyDeleted([String]$Path) {
-    if (Test-Path "Registry::$Path") {
+    if (Test-Path -LiteralPath "Registry::$Path") {
         DoUpdate "Registry key $Path deleted" {
-            Remove-Item -Path "Registry::$Path" -Force -Recurse | Out-Null
+            Remove-Item -LiteralPath "Registry::$Path" -Force -Recurse | Out-Null
         }
     } else {
         LogIdempotent "Registry key $Path is already missing"
@@ -29,7 +26,7 @@ Function EnsureRegistryKeyDeleted([String]$Path) {
 }
 
 Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value) {
-    if (!(Test-Path "Registry::$Path")) {
+    if (!(Test-Path -LiteralPath "Registry::$Path")) {
         if ($null -eq $Value) {
             LogIdempotent "Registry item $Path\$Name is already missing"
             return
@@ -40,12 +37,31 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
         }
     }
 
-    $item = $( Get-Item -Path "Registry::$Path" ).OpenSubKey("", $true)
-    $currentValue = $item.GetValue($Name)
 
-    if ($null -ne $Value) {
-        if ($Value.GetType() -eq [ScriptBlock]) {
-            $Value = $Value.InvokeReturnAsIs($currentValue)
+    $key = Get-Item -LiteralPath "Registry::$Path" -ErrorAction:SilentlyContinue
+    if ($null -ne $key) {
+        try {
+            $item = $key.OpenSubKey("", $true)
+            $canWrite = $true
+        }
+        catch [System.Security.SecurityException] {
+            $item = $key.OpenSubKey("", $false)
+            $canWrite = $false
+        }
+        $currentValue = $item.GetValue($Name)
+
+        if ($null -ne $Value) {
+            if ($Value.GetType() -eq [ScriptBlock]) {
+                $Value = $Value.InvokeReturnAsIs($currentValue)
+            }
+        }
+    }
+    else {
+        if (IsDryRun) {
+            $canWrite = $true
+        } else {
+            LogWarn "Registry key $Path cannot be accessed"
+            return
         }
     }
 
@@ -58,13 +74,21 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
                 $msg = "Registry item $Path\$Name value was not existing, created with '$Value'"
             }
 
-            DoUpdate $msg {
-                $item.SetValue($Name, $Value, $Type)
+            if ($canWrite) {
+                DoUpdate $msg {
+                    $item.SetValue($Name, $Value, $Type)
+                }
+            } else {
+                LogWarn "Registry item $Path\$Name cannot be updated"
             }
         }
         else {
-            DoUpdate "Registry item $Path\$Name removed, previous value was '$currentValue'" {
-                $item.DeleteValue($Name)
+            if ($canWrite) {
+                DoUpdate "Registry item $Path\$Name removed, previous value was '$currentValue'" {
+                    $item.DeleteValue($Name)
+                }
+            } else {
+                LogWarn "Registry item $Path\$Name cannot be deleted"
             }
         }
     }
@@ -78,6 +102,14 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
     }
 }
 
+
+Function IncrementGlobalAssociationChangedCounter {
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "GlobalAssocChangedCounter" -Type DWORD -Value {
+        Param($Value)
+        return $Value + 1
+    }
+}
+
 Function EnsureFirewallRule([String]$Name, [Boolean]$Activated) {
     Get-NetFirewallRule -Name $Name | ForEach-Object {
         $isEnabled = $_.Enabled -eq [Microsoft.PowerShell.Cmdletization.GeneratedTypes.NetSecurity.Enabled]::True
@@ -85,14 +117,22 @@ Function EnsureFirewallRule([String]$Name, [Boolean]$Activated) {
             if ($isEnabled) {
                 LogIdempotent "Firewall rule '$( $_.Name )' is already enabled"
             } else {
-                DoUpdate "Firewall rule '$( $_.Name )' was disabled, enabling it" {
-                    Enable-NetFirewallRule -Name $_.Name
+                if (IsAdmin) {
+                    DoUpdate "Firewall rule '$( $_.Name )' was disabled, enabling it" {
+                        Enable-NetFirewallRule -Name $_.Name
+                    }
+                } else {
+                    LogWarn "Firewall rule '$( $_.Name )' cannot be enabled, it requires administrator privileges"
                 }
             }
         } else {
             if ($isEnabled) {
-                DoUpdate "Firewall rule '$( $_.Name )' was enabled, disabling it" {
-                    Disable-NetFirewallRule -Name $_.Name
+                if (IsAdmin) {
+                    DoUpdate "Firewall rule '$( $_.Name )' was enabled, disabling it" {
+                        Disable-NetFirewallRule -Name $_.Name
+                    }
+                } else {
+                    LogWarn "Firewall rule '$( $_.Name )' cannot be disabled, it requires administrator privileges"
                 }
             } else {
                 LogIdempotent "Firewall rule '$( $_.Name )' is already disabled"
@@ -148,13 +188,13 @@ Function EnsurePowerConfigValue($Setting, $Source, $Value) {
         }
     }
 
-    $Value = $( KeyToValue $Setting @{
+    $Value = ( KeyToValue $Setting @{
         ScreenTimeout = $timeoutToIndex
         SleepTimeOut = $timeoutToIndex
         PowerButtonAction = $buttonActionToIndex
         SleepButtonAction = $buttonActionToIndex
         LidButtonAction = $buttonActionToIndex
-    } ).InvokeReturnAsIs($Value)
+    }).InvokeReturnAsIs($Value)
 
     $currentSchemeGUID = Get-ItemPropertyValue -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\NameSpace\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}" -Name "PreferredPlan"
 
@@ -173,7 +213,12 @@ Function EnsurePowerConfigValue($Setting, $Source, $Value) {
 }
 
 Function EnsureWindowsFeature($Features) {
-    ForEach ($feature in Get-WindowsOptionalFeature -Online) {
+    if (!(IsAdmin)) {
+        LogWarn "Windows features management requires administrator privileges"
+        return
+    }
+
+    foreach ($feature in Get-WindowsOptionalFeature -Online) {
         $featureName = $feature.FeatureName
         $featureEnabled = $feature.State -eq [Microsoft.Dism.Commands.FeatureState]::Enabled
 
@@ -205,52 +250,28 @@ Function EnsureWindowsFeature($Features) {
     }
 }
 
-Function EnsureMSIApplication([String]$Name, [String]$URL, [String]$ID, [Boolean]$Installed) {
-    $app = Get-WmiObject -Class Win32_Product | Where-Object { $_.IdentifyingNumber -eq "{$ID}" }
-    if ($Installed) {
-        if ($null -eq $app) {
-            DoUpdate "Application '$Name' has been installed" {
-                LogUpdate "Application '$Name' not installed"
-                LogUpdate "Downloading application '$Name' from $URL ..."
-                $tmp = New-TemporaryFile
-                Invoke-WebRequest $URL -OutFile $tmp
-                LogUpdate "Installing application '$Name'..."
-                Start-Process -Wait -FilePath "msiexec.exe" "/i $tmp /qn"
-                $tmp.Delete()
-            }
+Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
+    if (Test-Path -LiteralPath $Shortcut) {
+        if ($Target) {
+            LogIdempotent "Shortcut '$Shortcut' already exists"
         } else {
-            LogIdempotent "Application '$Name' is already installed"
+            DoUpdate "Shortcut '$Shortcut' deleted" {
+                Remove-Item $Shortcut
+            }
         }
     } else {
-        if ($null -ne $app) {
-            DoUpdate "Application '$Name' has been uninstalled" {
-                LogUpdate "Uninstalling application '$Name'..."
-                $app.Uninstall() | Out-Null
+        if ($Target) {
+            DoUpdate "Shortcut '$Shortcut' created" {
+                $shortcutObj = (New-Object -comObject WScript.Shell).CreateShortcut($Shortcut)
+                $shortcutObj.TargetPath = $Target
+                if ($null -ne $Icon) {
+                    $shortcutObj.IconLocation = $Icon
+                }
+                $shortcutObj.Save()
             }
         } else {
-            LogIdempotent "Application '$Name' is already uninstalled"
+            LogIdempotent "Shortcut '$Shortcut' is already missing"
         }
     }
 }
 
-Function DoUpdate($Message, $UpdateScript) {
-    LogUpdate $Message
-    $UpdateScript.InvokeReturnAsIs()
-}
-
-Function LogUpdate($Message) {
-    #    Write-Output "[UPDATE] $Message"
-    Write-Host -ForegroundColor Cyan $Message
-}
-
-Function LogIdempotent($Message) {
-    #    Write-Output "[IDEM ] $Message"
-    Write-Host -ForegroundColor Green $Message
-}
-
-Function LogMessage($Message) {
-    #    Write-Output "[MSG   ] $Message"
-    Write-Host $Message
-}
-
-Export-ModuleMember -Function *

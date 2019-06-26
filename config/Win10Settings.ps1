@@ -1,8 +1,4 @@
-Import-Module -Name "$PSScriptRoot\Win10Config.psm1" -Force
-
-# Execute the script with Administrator privileges
-RequireAdmin
-
+. "$(sboot_mod "Win10Tweaks")"
 
 # Same as Settings -> System -> About -> Rename this PC
 # See https://www.tenforums.com/tutorials/5174-change-computer-name-windows-10-a.html
@@ -103,6 +99,10 @@ Machine_Explorer_SpecialFolder Music Hide  # Show | Hide
 Machine_Explorer_SpecialFolder Pictures Show  # Show | Hide
 Machine_Explorer_SpecialFolder Videos Hide  # Show | Hide
 
+# Control Edge shortcut on desktop
+# See https://www.tenforums.com/tutorials/7755-create-shortcut-microsoft-edge-windows-10-a.html
+# See https://social.technet.microsoft.com/wiki/contents/articles/51546.windows-10-build-1803-registry-tweak-to-disable-microsoft-edge-shortcut-creation-on-desktop.aspx
+Machine_EdgeDesktopLink Hide # Show | Hide
 
 EnsureWindowsFeature @{
     "TelnetClient" = "Enabled"
@@ -117,8 +117,6 @@ EnsureWindowsFeature @{
     "MicrosoftWindowsPowerShellV2Root" = "Disabled"
     "WorkFolders-Client" = "Disabled"
 }
-
-Machine_Application_7Zip Install @("iso", "vhd") # Uninstalled | Install
 
 # Same as Taskbar context menu -> Show task view button
 # See https://www.tenforums.com/tutorials/2853-hide-show-task-view-button-taskbar-windows-10-a.html

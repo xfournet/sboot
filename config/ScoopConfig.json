@@ -1,0 +1,32 @@
+{
+  "buckets": [
+    "main",
+    "sboot@https://github.com/xfournet/scoot-sboot"
+  ],
+  "apps": [
+    "######## Core Scoop dependencies ########",
+    "aria2",
+    "7zip",
+    "git",
+    "sboot/sboot",
+    ""
+  ],
+  "exts": [
+    {
+      "name": "git",
+      "script": "EnsureGitConfiguration"
+    },
+    {
+      "name": "7zip",
+      "script": "Ensure7ZipConfiguration -ExcludeExt @('iso', 'vhd')"
+    },
+    {
+      "name": "hxd",
+      "script": "EnsureHxdConfiguration"
+    },
+    {
+      "name": "vim",
+      "script": "EnsureVimConfiguration"
+    }
+  ]
+}
