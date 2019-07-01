@@ -62,12 +62,23 @@ Function EnsureScoopApp($appSpec) {
             }
         }
     } else {
-        LogWarn "Invalid application : $App"
+        LogWarn "Invalid application : $appSpec"
     }
 }
 
 Function EnsureScoopExt($extSpec) {
-    $scriptLines = @(". `"`$( sboot_mod `"ScoopExt-$($extSpec.name)`" )`"")
-    $scriptLines += $extSpec.script
-    Invoke-Expression ($scriptLines -join "`r`n")
+    if ($extSpec.name -match "^((.+)/)?([^@/]+)$") {
+        $extRepo = $Matches[2]
+        $extName = $Matches[3]
+
+        if (!$extRepo) {
+            $extRepo = "sboot"
+        }
+
+        $scriptLines = @(". `"`$( sboot_mod `"$extRepo/ScoopExt-$( $extName )`" )`"")
+        $scriptLines += $extSpec.script
+        Invoke-Expression ($scriptLines -join "`r`n")
+    } else {
+        LogWarn "Invalid extension : $( $extSpec.name )"
+    }
 }
