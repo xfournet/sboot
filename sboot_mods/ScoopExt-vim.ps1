@@ -1,10 +1,15 @@
 . "$( sboot_mod "ScoopMod" )"
 
-Function EnsureVimConfiguration {
-    $count = GetUpdateCount
+Function EnsureVimConfiguration([switch]$Force) {
 
     $clsid = "{51EEE242-AD87-11d3-9C1E-0090278BBD99}"
     $isInstalled = ScoopIsInstalled "vim"
+    if ($isInstalled) {
+        $content = "source `$SCOOP/persist/vim/vimrc.vim`n"
+        EnsureFileContent -Path "~\_vimrc" -Content $content -Force:$Force
+    }
+
+    $count = GetUpdateCount
     if ($isInstalled) {
         $vimPath = scoop prefix "vim"
         EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Vim\Gvim" -Name "path" -Type String -Value "$vimPath\gvim.exe"
