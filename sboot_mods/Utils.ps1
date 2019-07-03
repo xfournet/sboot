@@ -275,3 +275,24 @@ Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
     }
 }
 
+Function EnsureFileContent([String]$Path, [String]$Content, [switch]$Force) {
+    if(Test-Path -LiteralPath $Path) {
+        $currentContent = Get-Content -LiteralPath $Path -Encoding ASCII -Raw
+        if($currentContent -ne $Content) {
+            if($Force) {
+                DoUpdate "File '$Path' has been overwritten with the required content" {
+                    $Content | Out-File -LiteralPath $Path -Encoding ASCII -NoNewline
+                }
+            } else {
+                LogWarn "File '$Path' exists but doesn't have the required content. Use -Force to overwrite it"
+            }
+        } else {
+            LogIdempotent "File '$Path' already exists with the required content"
+        }
+    } else {
+        DoUpdate "File '$Path' created" {
+            $Content | Out-File -LiteralPath $Path -Encoding ASCII -NoNewline
+        }
+    }
+}
+

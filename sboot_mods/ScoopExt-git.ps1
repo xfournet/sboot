@@ -1,8 +1,9 @@
 . "$( sboot_mod "ScoopMod" )"
 
-Function EnsureGitConfiguration {
+Function EnsureGitConfiguration([switch]$Force) {
     $isInstalled = ScoopIsInstalled "git"
     if ($isInstalled) {
-        "[include]`n    path = $($scoopdir.Replace("\", "/"))/persist/git/.gitconfig`n" | Out-File -FilePath "$env:USERPROFILE\.gitconfig" -Encoding ASCII -NoNewline
+        $content = "[include]`n    path = $($scoopdir.Replace("\", "/"))/persist/git/.gitconfig`n"
+        EnsureFileContent -Path "~\.gitconfig" -Content $content -Force:$Force
     }
 }
