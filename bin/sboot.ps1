@@ -22,6 +22,10 @@ if ($args) {
     }
 }
 
+Function IsAdmin {
+    return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")
+}
+
 Function IsVerbose {
     return $sboot_verbose
 }
@@ -30,15 +34,20 @@ Function IsDryRun {
     return $sboot_dryRun
 }
 
-Function DoUpdate($Message, $UpdateScript) {
+Function DoUpdate([switch] $RequireAdmin, $Message, $UpdateScript) {
     $sboot_update_count.Value = $sboot_update_count.Value + 1
     if (IsDryRun) {
         LogUpdate "What if: $Message"
     } else {
-        LogUpdate $Message
-        $UpdateScript.InvokeReturnAsIs()
+        if($RequireAdmin -And (IsAdmin) -Or !($RequireAdmin)) {
+            LogUpdate $Message
+            $UpdateScript.InvokeReturnAsIs()
+        } else {
+            LogWarn "Update requires administrator privileges: $Message"
+        }
     }
 }
+
 
 Function GetUpdateCount {
     return $sboot_update_count.Value

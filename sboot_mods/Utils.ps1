@@ -1,7 +1,3 @@
-Function IsAdmin {
-    return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")
-}
-
 Function Restart {
     Write-Host "------------------------------------" -ForegroundColor Red
     Read-Host -Prompt "Setup is done, restart is needed, press [ENTER] to restart computer."
@@ -117,22 +113,14 @@ Function EnsureFirewallRule([String]$Name, [Boolean]$Activated) {
             if ($isEnabled) {
                 LogIdempotent "Firewall rule '$( $_.Name )' is already enabled"
             } else {
-                if (IsAdmin) {
-                    DoUpdate "Firewall rule '$( $_.Name )' was disabled, enabling it" {
-                        Enable-NetFirewallRule -Name $_.Name
-                    }
-                } else {
-                    LogWarn "Firewall rule '$( $_.Name )' cannot be enabled, it requires administrator privileges"
+                DoUpdate -RequireAdmin "Firewall rule '$( $_.Name )' was disabled, enabling it" {
+                    Enable-NetFirewallRule -Name $_.Name
                 }
             }
         } else {
             if ($isEnabled) {
-                if (IsAdmin) {
-                    DoUpdate "Firewall rule '$( $_.Name )' was enabled, disabling it" {
-                        Disable-NetFirewallRule -Name $_.Name
-                    }
-                } else {
-                    LogWarn "Firewall rule '$( $_.Name )' cannot be disabled, it requires administrator privileges"
+                DoUpdate -RequireAdmin "Firewall rule '$( $_.Name )' was enabled, disabling it" {
+                    Disable-NetFirewallRule -Name $_.Name
                 }
             } else {
                 LogIdempotent "Firewall rule '$( $_.Name )' is already disabled"
