@@ -5,16 +5,31 @@ $scoopRootDir = scoop prefix scoop
 Function EnsureScoopConfig([String]$ScoopConfig) {
     $scoopConf = ConvertFrom-Json $ScoopConfig
 
+    $allConfiguredBuckets = @()
     foreach ($bucketSpec in $scoopConf.buckets) {
         if ($bucketSpec -ne "" -and !($bucketSpec -like "#*")) {
-            EnsureScoopBucket $bucketSpec
+            $bucketName = EnsureScoopBucket $bucketSpec
+            if ($bucketName) {
+                $allConfiguredBuckets += $bucketName
+            }
         }
     }
+    foreach ($extraBucket in (Get-LocalBucket | Where-Object { $_ -notin $allConfiguredBuckets })) {
+        LogWarn "Bucket '$extraBucket' is not referenced in sboot configuration"
+    }
 
+
+    $allConfiguredApps = @()
     foreach ($appSpec in $scoopConf.apps) {
         if ($appSpec -ne "" -and !($appSpec -like "#*")) {
-            EnsureScoopApp $appSpec
+            $appName = EnsureScoopApp $appSpec
+            if ($appName) {
+                $allConfiguredApps += $appName
+            }
         }
+    }
+    foreach ($extraApp in (installed_apps($false) | Where-Object { $_ -notin $allConfiguredApps })) {
+        LogWarn "Application '$extraApp' is not referenced in sboot configuration"
     }
 
     foreach ($extSpec in $scoopConf.exts) {
@@ -37,6 +52,7 @@ Function EnsureScoopBucket($bucketSpec) {
                 scoop bucket add $bucketName $bucketRepo
             }
         }
+        return $bucketName
     } else {
         LogWarn "Invalid bucket : $bucketSpec"
     }
@@ -55,6 +71,7 @@ Function EnsureScoopApp($appSpec) {
                 scoop install $appSpec
             }
         }
+        return $appName
     } else {
         LogWarn "Invalid application : $appSpec"
     }

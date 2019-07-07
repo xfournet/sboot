@@ -9,4 +9,3 @@ sboot_cfg -Name "SbootProfiles" -Default -Script {
     . "$( sboot_mod "SbootProfiles" )"
     EnsurePowershellProfileConfiguration
 }
-
