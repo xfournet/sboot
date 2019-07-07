@@ -13,20 +13,37 @@
   ],
   "exts": [
     {
-      "name": "git",
-      "script": "EnsureGitConfiguration"
+      "app": "7zip",
+      "parameters": {
+        "excludedExtensions": [
+          "iso",
+          "vhd"
+        ]
+      }
     },
     {
-      "name": "7zip",
-      "script": "Ensure7ZipConfiguration -ExcludeExt @('iso', 'vhd')"
+      "app": "git",
+      "parameters": {
+        "overwriteUserGitconfig": false
+      }
     },
     {
-      "name": "hxd",
-      "script": "EnsureHxdConfiguration"
+      "app": "hxd"
     },
     {
-      "name": "vim",
-      "script": "EnsureVimConfiguration"
+      "app": "keepass"
+    },
+    {
+      "app": "notepadplusplus"
+    },
+    {
+      "app": "vim",
+      "parameters": {
+        "overwriteUserVimrc": false
+      }
+    },
+    {
+      "app": "winmerge"
     }
   ]
 }

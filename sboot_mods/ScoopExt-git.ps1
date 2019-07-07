@@ -1,9 +1,9 @@
-. "$( sboot_mod "ScoopMod" )"
+. "$( sboot_mod "Utils" )"
 
-Function EnsureGitConfiguration([switch]$Force) {
-    $isInstalled = ScoopIsInstalled "git"
-    if ($isInstalled) {
-        $content = "[include]`n    path = $($scoopdir.Replace("\", "/"))/persist/git/.gitconfig`n"
-        EnsureFileContent -Path "~\.gitconfig" -Content $content -Force:$Force
-    }
+Function AppInstalled([String]$AppDir, [switch]$overwriteUserGitconfig) {
+    $content = "[include]`n    path = $($scoopdir.Replace("\", "/") )/persist/git/.gitconfig`n"
+    EnsureFileContent -Path "~\.gitconfig" -Content $content -Force:$overwriteUserGitconfig  -AllowForceHelpMessage "To allow overwrite, set 'overwriteUserGitconfig' option to 'true' in $env:SCOOP\persist\sboot\config\ScoopConfig.json"
+}
+
+Function AppUninstalled {
 }

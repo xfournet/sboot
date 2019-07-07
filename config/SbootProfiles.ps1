@@ -1,1 +1,0 @@
-. "$( sboot_mod "SbootProfiles" )"

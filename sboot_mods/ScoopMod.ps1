@@ -2,8 +2,6 @@ $scoopRootDir = scoop prefix scoop
 . "$scoopRootDir\lib\core.ps1"
 . "$scoopRootDir\lib\buckets.ps1"
 
-. "$( sboot_mod "Utils" )"
-
 Function EnsureScoopConfig([String]$ScoopConfig) {
     $scoopConf = ConvertFrom-Json $ScoopConfig
 
@@ -32,7 +30,7 @@ Function EnsureScoopBucket($bucketSpec) {
         $bucketRepo = $Matches[3]
 
         $dir = Find-BucketDirectory $bucketName -Root
-        if (test-path $dir) {
+        if (Test-Path -LiteralPath $dir) {
             LogIdempotent "Scoop bucket '$bucketName' already exists"
         } else {
             DoUpdate "Scoop bucket '$bucketSpec' added" {
@@ -44,15 +42,11 @@ Function EnsureScoopBucket($bucketSpec) {
     }
 }
 
-Function ScoopIsInstalled($appName) {
-    return installed $appName
-}
-
 Function EnsureScoopApp($appSpec) {
     if ($appSpec -match "^((.+)/)?([^@/]+)(@(.+))?$") {
-        $appRepo = $Matches[2]
+        # $appRepo = $Matches[2]
         $appName = $Matches[3]
-        $appVersion = $Matches[5]
+        # $appVersion = $Matches[5]
 
         if (installed $appName) {
             LogIdempotent "Scoop app '$( $appName )' is already installed"
@@ -67,17 +61,31 @@ Function EnsureScoopApp($appSpec) {
 }
 
 Function EnsureScoopExt($extSpec) {
-    if ($extSpec.name -match "^((.+)/)?([^@/]+)$") {
+    if ($extSpec.app -match "^((.+)/)?([^@/]+)$") {
         $extRepo = $Matches[2]
-        $extName = $Matches[3]
+        $extAppName = $Matches[3]
 
         if (!$extRepo) {
             $extRepo = "sboot"
         }
 
-        $scriptLines = @(". `"`$( sboot_mod `"$extRepo/ScoopExt-$( $extName )`" )`"")
-        $scriptLines += $extSpec.script
-        Invoke-Expression ($scriptLines -join "`r`n")
+        $params = @{ }
+        if ($extSpec.parameters) {
+            $extSpec.parameters.PSObject.Properties | Foreach-Object { $params[$_.Name] = $_.Value }
+        }
+
+        if (installed $extAppName) {
+            $params["AppDir"] = $( scoop prefix $extAppName )
+            & {
+                . "$( sboot_mod "$extRepo/ScoopExt-$( $extAppName )" )"
+                AppInstalled @params
+            }
+        } else {
+            & {
+                . "$( sboot_mod "$extRepo/ScoopExt-$( $extAppName )" )"
+                AppUninstalled @params
+            }
+        }
     } else {
         LogWarn "Invalid extension : $( $extSpec.name )"
     }

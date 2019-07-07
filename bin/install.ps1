@@ -41,4 +41,4 @@ scoop bucket add sboot https://github.com/xfournet/scoop-sboot.git
 scoop install sboot/sboot
 
 Write-Host ""
-Write-Host "Scoop bootstrapped. If everything is OK, execute 'sboot apply -All' command. If you are unsure, first execute 'sboot apply -All -WhatIf'"
+Write-Host "Scoop bootstrapped. If everything is OK, execute 'sboot apply *' command. If you are unsure, first execute 'sboot apply -n *'"

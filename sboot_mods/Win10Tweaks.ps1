@@ -168,7 +168,7 @@ Function Machine_Explorer_QuickAccessInNavigationPane($Action) {
 }
 
 Function Machine_Explorer_RemovableDrives_Duplicate($Action) {
-    ( KeyToValue $Action @{
+    & (KeyToValue $Action @{
         Show = {
             EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\DelegateFolders\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}" -Name "@" -Type String -Value "Removable Drives"
             EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\DelegateFolders\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}" -Name "@" -Type String -Value "Removable Drives"
@@ -177,7 +177,7 @@ Function Machine_Explorer_RemovableDrives_Duplicate($Action) {
             EnsureRegistryKeyDeleted -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\DelegateFolders\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}"
             EnsureRegistryKeyDeleted -Path "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\DelegateFolders\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}"
         }
-    }).InvokeReturnAsIs()
+    })
 }
 
 Function Machine_Explorer_CompressedFolders($Action) {
@@ -386,7 +386,7 @@ Function User_Explorer_SearchBoxHistory($Action) {
 
 Function User_Explorer_OneDriveDefaultFolder($Action) {
     $Path = "HKEY_CURRENT_USER\Software\Classes\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}"
-    if (Test-Path "Registry::$Path") {
+    if (Test-Path -LiteralPath "Registry::$Path") {
         EnsureRegistryValue -Path $Path -Name "System.IsPinnedToNameSpaceTree" -Type DWORD -Value ( KeyToValue $Action @{
             Show = 1
             Hide = 0

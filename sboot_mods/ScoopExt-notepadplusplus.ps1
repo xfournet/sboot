@@ -1,20 +1,11 @@
-. "$( sboot_mod "ScoopMod" )"
+. "$( sboot_mod "Utils" )"
 
-Function EnsureNotepadplusplusConfiguration {
-    $count = GetUpdateCount
+Function AppInstalled([String]$AppDir) {
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++" -Name "" -Type String -Value "Edit with &Notepad++"
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++" -Name "icon" -Type String  -Value """$AppDir\notepad++.exe"""
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++\command" -Name "" -Type String -Value """$AppDir\notepad++.exe"" ""%1"""
+}
 
-    $isInstalled = ScoopIsInstalled "notepadplusplus"
-    if ($isInstalled) {
-        $notepadplusplusPath = scoop prefix "notepadplusplus"
-        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++" -Name "" -Type String -Value "Edit with &Notepad++"
-        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++" -Name "icon" -Type String  -Value """$notepadplusplusPath\notepad++.exe"""
-        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++\command" -Name "" -Type String -Value """$notepadplusplusPath\notepad++.exe"" ""%1"""
-    } else {
-        EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++"
-    }
-
-    $count = (GetUpdateCount) - $count
-    if ($count) {
-        IncrementGlobalAssociationChangedCounter
-    }
+Function AppUninstalled {
+    EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\*\shell\Notepad++"
 }

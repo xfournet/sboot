@@ -22,20 +22,24 @@ Function EnsureRegistryKeyDeleted([String]$Path) {
 }
 
 Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value) {
+    $hasValue = ($null -ne $Value)
     if (!(Test-Path -LiteralPath "Registry::$Path")) {
-        if ($null -eq $Value) {
+        if (!$hasValue) {
             LogIdempotent "Registry item $Path\$Name is already missing"
             return
         }
 
         DoUpdate "Registry path $Path created" {
-            New-Item -Path "Registry::$Path" -Force | Out-Null
+            $newItem = New-Item -Path "Registry::$Path" -Force -ErrorAction:SilentlyContinue
+            if (!$newItem) {
+                LogWarn "Registry key $Path cannot be created"
+            }
         }
     }
 
 
     $key = Get-Item -LiteralPath "Registry::$Path" -ErrorAction:SilentlyContinue
-    if ($null -ne $key) {
+    if ($key) {
         try {
             $item = $key.OpenSubKey("", $true)
             $canWrite = $true
@@ -46,9 +50,10 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
         }
         $currentValue = $item.GetValue($Name)
 
-        if ($null -ne $Value) {
+        if ($hasValue) {
             if ($Value.GetType() -eq [ScriptBlock]) {
-                $Value = $Value.InvokeReturnAsIs($currentValue)
+                $Value = & $Value $currentValue
+                $hasValue = ($null -ne $Value)
             }
         }
     }
@@ -62,7 +67,7 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
     }
 
     if ($currentValue -ne $Value) {
-        if ($null -ne $Value) {
+        if ($hasValue) {
             if ($null -ne $currentValue) {
                 $msg = "Registry item $Path\$Name value was '$currentValue', set to '$Value'"
             }
@@ -89,7 +94,7 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
         }
     }
     else {
-        if ($null -ne $Value) {
+        if ($hasValue) {
             LogIdempotent "Registry item $Path\$Name value is already set to '$Value'"
         }
         else {
@@ -98,12 +103,56 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
     }
 }
 
+Function FileExtAssociate([String]$Ext, [String]$FileType, [String]$IfFileType) {
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\.$Ext" -Name "" -Type String -Value {
+        param($CurrentFileType)
 
-Function IncrementGlobalAssociationChangedCounter {
-    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "GlobalAssocChangedCounter" -Type DWORD -Value {
-        Param($Value)
-        return $Value + 1
+        if ($IfFileType -and ($CurrentFileType -ne $IfFileType)) {
+            return $CurrentFileType
+        } else {
+            return $FileType
+        }
     }
+}
+
+Function FileTypeDefine([String]$Type, [String]$Label, [String]$Command, [String]$CommandLabel, [String]$Icon) {
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\$Type" -Name "" -Type String -Value $Label
+    if ($CommandLabel) {
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\$Type\shell\open" -Name "" -Type String -Value $CommandLabel
+    }
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\$Type\shell\open\command" -Name "" -Type String -Value $Command
+    if ($Icon) {
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\$Type\DefaultIcon" -Name "" -Type String -Value $Icon
+    }
+}
+
+Function FileTypeUndefine([String]$Type) {
+    EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\$Type"
+
+}
+
+Function EnsureShellExtensionRegistered([String]$CLSID, [String]$Label, [String]$DLL64Path, [String]$DLL32Path) {
+    if ($DLL64Path) {
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\CLSID\$CLSID" -Name "" -Type String -Value $Label
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\CLSID\$CLSID\InprocServer32" -Name "" -Type String -Value $DLL64Path
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\CLSID\$CLSID\InprocServer32" -Name "ThreadingModel" -Type String -Value "Apartment"
+        EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" -Name $CLSID -Type String -Value $Label
+    }
+
+    if ($DLL32Path) {
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\WOW6432Node\CLSID\$CLSID" -Name "" -Type String -Value $Label
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\WOW6432Node\CLSID\$CLSID\InprocServer32" -Name "" -Type String -Value $DLL32Path
+        EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\WOW6432Node\CLSID\$CLSID\InprocServer32" -Name "ThreadingModel" -Type String -Value "Apartment"
+        EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" -Name $CLSID -Type String -Value $Label
+    }
+}
+
+Function EnsureShellExtensionUnregistered([String]$CLSID) {
+    EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\CLSID\$clsid"
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" -Name "$clsid" -Type String -Value $null
+
+    EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\WOW6432Node\CLSID\$clsid"
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" -Name "$clsid" -Type String -Value $null
 }
 
 Function EnsureFirewallRule([String]$Name, [Boolean]$Activated) {
@@ -176,13 +225,15 @@ Function EnsurePowerConfigValue($Setting, $Source, $Value) {
         }
     }
 
-    $Value = ( KeyToValue $Setting @{
+    $valueToIndex = KeyToValue $Setting @{
         ScreenTimeout = $timeoutToIndex
         SleepTimeOut = $timeoutToIndex
         PowerButtonAction = $buttonActionToIndex
         SleepButtonAction = $buttonActionToIndex
         LidButtonAction = $buttonActionToIndex
-    }).InvokeReturnAsIs($Value)
+    }
+
+    $Value = & $valueToIndex $Value
 
     $currentSchemeGUID = Get-ItemPropertyValue -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\NameSpace\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}" -Name "PreferredPlan"
 
@@ -252,7 +303,7 @@ Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
             DoUpdate "Shortcut '$Shortcut' created" {
                 $shortcutObj = (New-Object -comObject WScript.Shell).CreateShortcut($Shortcut)
                 $shortcutObj.TargetPath = $Target
-                if ($null -ne $Icon) {
+                if ($Icon) {
                     $shortcutObj.IconLocation = $Icon
                 }
                 $shortcutObj.Save()
@@ -263,16 +314,16 @@ Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
     }
 }
 
-Function EnsureFileContent([String]$Path, [String]$Content, [switch]$Force) {
-    if(Test-Path -LiteralPath $Path) {
+Function EnsureFileContent([String]$Path, [String]$Content, [switch]$Force, [String]$AllowForceHelpMessage) {
+    if (Test-Path -LiteralPath $Path) {
         $currentContent = Get-Content -LiteralPath $Path -Encoding ASCII -Raw
-        if($currentContent -ne $Content) {
-            if($Force) {
+        if ($currentContent -ne $Content) {
+            if ($Force) {
                 DoUpdate "File '$Path' has been overwritten with the required content" {
                     $Content | Out-File -LiteralPath $Path -Encoding ASCII -NoNewline
                 }
             } else {
-                LogWarn "File '$Path' exists but doesn't have the required content. Use -Force to overwrite it"
+                LogWarn "File '$Path' exists but doesn't have the required content. $AllowForceHelpMessage"
             }
         } else {
             LogIdempotent "File '$Path' already exists with the required content"

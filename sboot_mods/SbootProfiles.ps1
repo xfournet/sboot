@@ -1,19 +1,19 @@
 . "$( sboot_mod "Utils" )"
 
-if (!(Test-Path $PROFILE)) {
-    $profileDir = Split-Path $PROFILE
-    DoUpdate -RequireAdmin "Creating default user profile powershell file" {
-        if (!(Test-Path $profileDir)) {
-            New-Item -Path $profileDir -ItemType Directory | Out-Null
+Function EnsurePowershellProfileConfiguration {
+    if (Test-Path -LiteralPath $PROFILE) {
+        $text = Get-Content $PROFILE
+    } else {
+        DoUpdate -RequireAdmin "Creating default user profile PowerShell file: $PROFILE" {
+            New-Item -Path $PROFILE -Force | Out-Null
         }
-
-        '' > $PROFILE
+        $text = ""
     }
 
-    $text = &{If(Test-Path -Path $Profile) {(Get-Content $PROFILE)} Else {""}}
-
-    if ($null -eq ($text | Select-String '#sboot-profiles')) {
-        DoUpdate -RequireAdmin "Add sboot-profiles to user profile powershell file" {
+    if ($text | Select-String '#sboot-profiles') {
+        LogIdempotent "sboot-profiles is already configured into user profile PowerShell file: $PROFILE"
+    } else {
+        DoUpdate -RequireAdmin "Add sboot-profiles to user profile PowerShell file: $PROFILE" {
             # read and write whole profile to avoid problems with line endings and encodings
             $new_profile = @($text) + "#sboot-profiles" + '. "$env:SCOOP\apps\sboot\current\bin\load-profiles.ps1"'
             $new_profile > $PROFILE
