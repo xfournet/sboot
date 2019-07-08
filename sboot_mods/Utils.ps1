@@ -1,7 +1,31 @@
-Function Restart {
-    Write-Host "------------------------------------" -ForegroundColor Red
-    Read-Host -Prompt "Setup is done, restart is needed, press [ENTER] to restart computer."
-    Restart-Computer
+Function EnsureEnvironmentVariable([String]$Name, [String]$Value) {
+    $currentValue = [environment]::GetEnvironmentVariable($Name)
+    if ($Value) {
+        if($currentValue) {
+            if ($currentValue -ne $Value) {
+                DoUpdate "Environment variable '$Name' value was '$currentValue', set to '$Value'" {
+                    [environment]::SetEnvironmentVariable($Name, $Value, 'User')
+                    [environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+                }
+            } else {
+                LogIdempotent "Environment variable '$Name' value is already set to '$Value'"
+            }
+        } else {
+            DoUpdate "Environment variable '$Name' value was undefined, set to '$Value'" {
+                [environment]::SetEnvironmentVariable($Name, $Value, 'User')
+                [environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+            }
+        }
+    } else {
+        if ($currentValue) {
+            DoUpdate "Environment variable '$Name' removed, previous value was '$currentValue'" {
+                [environment]::SetEnvironmentVariable($Name, $null, 'User')
+                [environment]::SetEnvironmentVariable($Name, $null, 'Process')
+            }
+        } else {
+            LogIdempotent "Environment variable '$Name' value is already undefined"
+        }
+    }
 }
 
 Function KeyToValue($Key, $Values) {
