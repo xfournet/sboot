@@ -1,6 +1,8 @@
 $scoopRootDir = scoop prefix scoop
 . "$scoopRootDir\lib\core.ps1"
 . "$scoopRootDir\lib\buckets.ps1"
+. "$scoopRootDir\lib\manifest.ps1"
+. "$scoopRootDir\lib\versions.ps1"
 
 Function EnsureScoopConfig([String]$ScoopConfig) {
     $scoopConf = ConvertFrom-Json $ScoopConfig
@@ -60,12 +62,25 @@ Function EnsureScoopBucket($bucketSpec) {
 
 Function EnsureScoopApp($appSpec) {
     if ($appSpec -match "^((.+)/)?([^@/]+)(@(.+))?$") {
-        # $appRepo = $Matches[2]
+        $appBucket = $Matches[2]
+        if (!$appBucket) {
+            $appBucket = "main"
+        }
         $appName = $Matches[3]
-        # $appVersion = $Matches[5]
+        $appVersion = $Matches[5]
 
         if (installed $appName) {
             LogIdempotent "Scoop app '$( $appName )' is already installed"
+
+            $ver = current_version $appName $false
+            $install_info = install_info $appName $ver $false
+            if ($install_info.bucket -ne $appBucket) {
+                LogWarn "Scoop app '$appName' is from bucket '$( $install_info.bucket )' but declared in bucket '$appBucket' in sboot"
+            }
+
+            if ($appVersion -and ($appVersion -ne $ver)) {
+                LogWarn "Scoop app '$appName' version is '$ver' but declared with version '$ver' in sboot"
+            }
         } else {
             DoUpdate "Scoop app '$appSpec' installed" {
                 scoop install $appSpec
