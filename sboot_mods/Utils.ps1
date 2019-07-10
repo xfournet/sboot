@@ -338,6 +338,28 @@ Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
     }
 }
 
+Function EnsureJunction([String]$JunctionPath, [String]$TargetPath) {
+    $junctionItem = Get-Item -LiteralPath $JunctionPath -ErrorAction:SilentlyContinue
+    if ($junctionItem) {
+        if ($junctionItem.LinkType -eq "Junction") {
+            if ($junctionItem.Target -eq $TargetPath) {
+                LogIdempotent "Junction '$JunctionPath' is already targeting '$TargetPath'"
+            } else {
+                DoUpdate "Changing junction '$JunctionPath' target from '$( $junctionItem.Target )' to '$TargetPath'" {
+                    junction /d "$JunctionPath"
+                    junction "$JunctionPath" "$TargetPath"
+                }
+            }
+        } else {
+            LogWarn "'$JunctionPath' already exist but is not a junction, cannot process it"
+        }
+    } else {
+        DoUpdate "Junction created from '$JunctionPath' to '$TargetPath'" {
+            junction "$JunctionPath" "$TargetPath"
+        }
+    }
+}
+
 Function EnsureFileContent([String]$Path, [String]$Content, [switch]$Force, [String]$AllowForceHelpMessage) {
     if (Test-Path -LiteralPath $Path) {
         $currentContent = Get-Content -LiteralPath $Path -Encoding ASCII -Raw

@@ -34,6 +34,9 @@
       "app": "keepass"
     },
     {
+      "app": "keystore-explorer"
+    },
+    {
       "app": "notepadplusplus"
     },
     {
