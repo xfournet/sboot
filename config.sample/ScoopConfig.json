@@ -22,6 +22,9 @@
       }
     },
     {
+      "app": "filezilla"
+    },
+    {
       "app": "git",
       "parameters": {
         "overwriteUserGitconfig": false

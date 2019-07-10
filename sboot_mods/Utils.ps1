@@ -1,7 +1,7 @@
 Function EnsureEnvironmentVariable([String]$Name, [String]$Value) {
     $currentValue = [environment]::GetEnvironmentVariable($Name)
     if ($Value) {
-        if($currentValue) {
+        if ($currentValue) {
             if ($currentValue -ne $Value) {
                 DoUpdate "Environment variable '$Name' value was '$currentValue', set to '$Value'" {
                     [environment]::SetEnvironmentVariable($Name, $Value, 'User')
@@ -377,6 +377,26 @@ Function EnsureFileContent([String]$Path, [String]$Content, [switch]$Force, [Str
     } else {
         DoUpdate "File '$Path' created" {
             $Content | Out-File -LiteralPath $Path -Encoding ASCII -NoNewline
+        }
+    }
+}
+
+Function EnsureFileDeleted([String]$Path) {
+    if (Test-Path -LiteralPath $Path) {
+        DoUpdate "File '$Path' has been deleted" {
+            Remove-Item -LiteralPath "$Path"
+        }
+    } else {
+        LogIdempotent "File '$Path' is already missing"
+    }
+}
+
+Function EnsureDirectoryExist([String]$Path) {
+    if (Test-Path -LiteralPath $Path) {
+        LogIdempotent "Directory '$Path' already exists"
+    } else {
+        DoUpdate "Directory '$Path' has been created" {
+            New-Item -ItemType Directory -Path "$Path" | Out-Null
         }
     }
 }
