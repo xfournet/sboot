@@ -79,7 +79,7 @@ Function EnsureScoopApp($appSpec) {
             }
 
             if ($appVersion -and ($appVersion -ne $ver)) {
-                LogWarn "Scoop app '$appName' version is '$ver' but declared with version '$ver' in sboot"
+                LogWarn "Scoop app '$appName' version is '$ver' but declared with version '$appVersion' in sboot"
             }
         } else {
             DoUpdate "Scoop app '$appSpec' installed" {
