@@ -54,6 +54,7 @@ Function AppInstalled([String]$AppDir, $ExcludeExt = @()) {
     EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\Directory\shellex\DragDropHandlers\7-Zip" -Name "" -Type String -Value "$sevenZipCLSID"
     EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\Drive\shellex\DragDropHandlers\7-Zip" -Name "" -Type String -Value "$sevenZipCLSID"
     EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\7-Zip" -Name "" -Type String -Value "$sevenZipCLSID"
+    EnsureRegistryValue -Path "HKEY_CLASSES_ROOT\Folder\shellex\DragDropHandlers\7-Zip" -Name "" -Type String -Value "$sevenZipCLSID"
 
     foreach ($ext in $fileTypes.Keys) {
         if ( $ExcludeExt.Contains($ext)) {
@@ -78,6 +79,7 @@ Function AppUninstalled($ExcludeExt = @()) {
     EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\Directory\shellex\DragDropHandlers\7-Zip"
     EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\Drive\shellex\DragDropHandlers\7-Zip"
     EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\7-Zip"
+    EnsureRegistryKeyDeleted -Path "HKEY_CLASSES_ROOT\Folder\shellex\DragDropHandlers\7-Zip"
 
     foreach ($ext in $fileTypes.Keys) {
         FileTypeUndefine -Type "7-Zip.$ext"
