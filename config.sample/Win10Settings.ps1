@@ -46,6 +46,9 @@ Machine_dotNETStrongCrypto Enabled  # Disabled | Enabled
 # See https://www.tenforums.com/tutorials/36010-enable-disable-num-lock-sign-screen-windows-10-a.html
 Machine_SignInScreen_Numlock On  # Off | On
 
+# Control access to Processor performance boost mode in Control Panel -> Power Options -> Change plan settings -> Change advanced power settings
+EnsurePowerManagementSetting ProcessorPerformanceBoostMode Show
+
 # Same as Settings -> System -> Power & sleep -> Screen -> On battery power, turn off after
 EnsurePowerConfigValue -Setting ScreenTimeout -Source DC -Value 5 # 5
 # Same as Settings -> System -> Power & sleep -> Screen -> When plugged in, turn off after
@@ -55,7 +58,7 @@ EnsurePowerConfigValue -Setting SleepTimeout -Source DC -Value 20 # 15
 # Same as Settings -> System -> Power & sleep -> Sleep -> When plugged in, PC goes to sleep after
 EnsurePowerConfigValue -Setting SleepTimeout -Source AC -Value 0 # 30
 # Same as Control Panel -> Power Options -> Choose what closing the lid does -> When I close the lid / On battery
-EnsurePowerConfigValue -Setting LidButtonAction -Source AC -Value DoNothing  # Sleep | Hibernate | Shutdown | DoNothing
+EnsurePowerConfigValue -Setting LidButtonAction -Source DC -Value DoNothing  # Sleep | Hibernate | Shutdown | DoNothing
 # Same as Control Panel -> Power Options -> Choose what closing the lid does -> When I close the lid / Plugged in
 EnsurePowerConfigValue -Setting LidButtonAction -Source AC -Value DoNothing  # Sleep | Hibernate | Shutdown | DoNothing
 

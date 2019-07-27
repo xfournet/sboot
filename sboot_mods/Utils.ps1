@@ -45,6 +45,13 @@ Function EnsureRegistryKeyDeleted([String]$Path) {
     }
 }
 
+Function GetRegistryValue([String]$Path, [String]$Name) {
+    try {
+        return Get-ItemPropertyValue -LiteralPath "Registry::$Path" -Name "$Name" -ErrorAction SilentlyContinue
+    } catch {
+    }
+}
+
 Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value) {
     $hasValue = ($null -ne $Value)
     if (!(Test-Path -LiteralPath "Registry::$Path")) {
@@ -203,22 +210,47 @@ Function EnsureFirewallRule([String]$Name, [Boolean]$Activated) {
 }
 
 # See https://docs.microsoft.com/en-us/windows-hardware/customize/power-settings/configure-power-settings
-Function EnsurePowerConfigValue($Setting, $Source, $Value) {
-    $subGUID = KeyToValue $Setting @{
+Function PowerSettingSubGUID($Setting) {
+    return KeyToValue $Setting @{
         ScreenTimeout = "7516b95f-f776-4464-8c53-06167f40cc99"
         SleepTimeOut = "238c9fa8-0aad-41ed-83f4-97be242c8f20"
         PowerButtonAction = "4f971e89-eebd-4455-a8de-9e59040e7347"
         SleepButtonAction = "4f971e89-eebd-4455-a8de-9e59040e7347"
         LidButtonAction = "4f971e89-eebd-4455-a8de-9e59040e7347"
+        ProcessorPerformanceBoostMode = "54533251-82be-4824-96c1-47b60b740d00"
     }
+}
 
-    $settingGUID = KeyToValue $Setting @{
+# See https://docs.microsoft.com/en-us/windows-hardware/customize/power-settings/configure-power-settings
+Function PowerSettingGUID($Setting) {
+    return KeyToValue $Setting @{
         ScreenTimeout = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e"
         SleepTimeOut = "29f6c1db-86da-48c5-9fdb-f2b67b1f44da"
         PowerButtonAction = "7648efa3-dd9c-4e3e-b566-50f929386280"
         SleepButtonAction = "96996bc0-ad50-47ec-923b-6f41874dd9eb"
         LidButtonAction = "5ca83367-6e45-459f-a27b-476b1d01c936"
+        ProcessorPerformanceBoostMode = "be337238-0d82-4146-a960-4f3749d470c7"
     }
+}
+
+Function EnsurePowerManagementSetting($Setting, $Action) {
+    $subGUID = PowerSettingSubGUID($Setting)
+    $settingGUID = PowerSettingGUID($Setting)
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\$subGUID\$settingGUID" -Name "Attributes" -Type String -Value ( KeyToValue $Action @{
+        Hide = {
+            Param($Value)
+            return $Value -band (-bnot2) -bor 1
+        }
+        Show = {
+            Param($Value)
+            return $Value -band (-bnot1) -bor 2
+        }
+    })
+}
+
+Function EnsurePowerConfigValue($Setting, $Source, $Value) {
+    $subGUID = PowerSettingSubGUID($Setting)
+    $settingGUID = PowerSettingGUID($Setting)
 
     $itemName = KeyToValue $Source @{
         AC = "AcSettingIndex"
@@ -259,11 +291,11 @@ Function EnsurePowerConfigValue($Setting, $Source, $Value) {
 
     $Value = & $valueToIndex $Value
 
-    $currentSchemeGUID = Get-ItemPropertyValue -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\NameSpace\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}" -Name "PreferredPlan"
+    $currentSchemeGUID = GetRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\NameSpace\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}" -Name "PreferredPlan"
 
-    $currentValue = Get-ItemPropertyValue -Path "Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$currentSchemeGUID\$subGUID\$settingGUID" -Name "$itemName" -ErrorAction SilentlyContinue
+    $currentValue = GetRegistryValue -Path "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$currentSchemeGUID\$subGUID\$settingGUID" -Name "$itemName"
     if ($null -eq $currentValue) {
-        $currentValue = Get-ItemPropertyValue -Path "Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\$subGUID\$settingGUID\DefaultPowerSchemeValues\$currentSchemeGUID" -Name "$itemName" -ErrorAction SilentlyContinue
+        $currentValue = GetRegistryValue -Path "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\$subGUID\$settingGUID\DefaultPowerSchemeValues\$currentSchemeGUID" -Name "$itemName"
     }
 
     if ($Value -ne $currentValue) {
