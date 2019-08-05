@@ -2,5 +2,5 @@
 
 In PowerShell console execute
 ```
-iwr -useb 'http://tinyurl.com/sboot-install' | iex
+iwr -useb 'https://tinyurl.com/sboot-install' | iex
 ```

@@ -1,7 +1,8 @@
 $scoopTarget = 'D:\scoop'
 $changeExecutionPolicy = (Get-ExecutionPolicy) -gt 'RemoteSigned' -or (Get-ExecutionPolicy) -eq 'ByPass'
 
-$scoopPersistUrl = Read-Host "Enter your Scoop persist directory's Git repository URL: "
+$scoopPersistUrl = Read-Host "Enter your Scoop persist directory's Git repository URL (e.g. https://github.com/xfournet/scoop-persist.git)"
+$scoopPersistBranch = Read-Host "Enter your Scoop persist directory's Git repository branch name (e.g. master)"
 
 Write-Host "Scoop will be installed to $scoopTarget"
 if ($changeExecutionPolicy) {
@@ -34,8 +35,13 @@ scoop install git
 scoop update
 scoop update *
 
-Remove-Item "$scoopTarget\persist" -Force
-git clone "$scoopPersistUrl" "$scoopTarget\persist"
+if (Test-Path -LiteralPath "$scoopTarget\persist") {
+    Remove-Item "$scoopTarget\persist" -Force
+}
+git clone -n "$scoopPersistUrl" "$scoopTarget\persist"
+pushd "$scoopTarget\persist"
+git checkout "$scoopPersistBranch"
+popd
 
 scoop bucket add sboot https://github.com/xfournet/scoop-sboot.git
 scoop install sboot/sboot
