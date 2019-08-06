@@ -345,6 +345,17 @@ Function EnsureWindowsFeature($Features) {
     }
 }
 
+Function EnsureWindowsDefenderExclusion($ExclusionPath) {
+    $exclusions = $(Get-MpPreference).ExclusionPath
+    if(($null -eq $exclusions) -or ([Array]::IndexOf($exclusions, $ExclusionPath) -eq -1)) {
+        DoUpdate -RequireAdmin "Windows defender exclusions has been updated to exclude '$ExclusionPath'" {
+            Add-MpPreference -ExclusionPath "$ExclusionPath"
+        }
+    } else {
+        LogIdempotent "Windows defender exclusion already contains path '$ExclusionPath'"
+    }
+}
+
 Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
     if (Test-Path -LiteralPath $Shortcut) {
         if ($Target) {
