@@ -562,3 +562,49 @@ Function User_TouchPad($Profile) {
         Simple = 0
     })
 }
+
+Function User_LanguageHotKeys($Action) {
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Keyboard Layout\Toggle" -Name "Hotkey" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 3
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Keyboard Layout\Toggle" -Name "Language Hotkey" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 3
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Keyboard Layout\Toggle" -Name "Layout Hotkey" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 3
+    })
+}
+
+Function User_OneDrive_AutoStart($Action) {
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" -Name "OneDrive" -Type String -Value ( KeyToValue $Action @{
+        Enabled = """$env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe"" /background"
+        Disabled = $null
+    })
+}
+
+Function User_IntelGFXTray($Action) {
+    $value = KeyToValue $Action @{
+        Show = 1
+        Hide = 0
+    }
+
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray\TrayIcon" -Name "ShowTrayIcon" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowBalloon" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowDPTBalloon" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowGaming" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowGamingNotification" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowGraphicsBalloon" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowOptimalBalloon" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowPromotions" -Type DWORD -Value $value
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\igfxtray" -Name "ShowPromotionsNotification" -Type DWORD -Value $value
+}
+
+Function User_IntelGFXHotKeys($Action) {
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Intel\Display\igfxcui\HotKeys" -Name "Enable" -Type DWORD -Value (KeyToValue $Action @{
+        Enabled = 1
+        Disabled = 0
+    })
+}
