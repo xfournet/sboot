@@ -8,6 +8,9 @@ Machine_ComputerName $env:ComputerName # $env:ComputerName | "<ComputerName>"
 # See https://www.tenforums.com/performance-maintenance/92329-how-disable-windows-script-host.html
 Machine_WindowsScriptHost Disabled  # Enabled | Disabled
 
+# Same as Settings -> Update & Security -> Windows Security -> Virus & threat protection -> Virus & threat protection settings -> Manage settings -> Exclusion -> Add or remove exclusion
+EnsureWindowsDefenderExclusion "D:\"
+
 # Same as Control Panel -> System -> Advanced system settings -> Startup and Recovery -> Settings... -> System failure -> Automatically restart
 # See https://www.tenforums.com/performance-maintenance/92329-how-disable-windows-script-host.html
 Machine_AutoRebootOnCrash Disabled  # Enabled | Disabled
@@ -30,7 +33,7 @@ Machine_Cortana Disabled  # Enabled | Disabled
 # See https://www.tenforums.com/tutorials/117755-enable-disable-security-questions-local-accounts-windows-10-a.html
 Machine_LocalAccountSecurityQuestions Disabled  # Enabled | Disabled
 
-# Same as Settings -> Update & Security -> Delivery Optimization -> Allow downloads from other PCs
+# Same as Settings -> Update & Security -> Windows Update -> Advanced options -> Delivery Optimization -> Allow downloads from other PCs
 # See https://www.tenforums.com/tutorials/105329-specify-how-windows-store-app-updates-downloaded-windows-10-a.html
 Machine_WindowsUpdateP2PDelivery Disabled  # LocalNetworkOnly | LocalNetworkAndInternet | Disabled
 
@@ -105,8 +108,14 @@ Machine_Explorer_SpecialFolder Videos Hide  # Show | Hide
 # Control Edge shortcut on desktop
 # See https://www.tenforums.com/tutorials/7755-create-shortcut-microsoft-edge-windows-10-a.html
 # See https://social.technet.microsoft.com/wiki/contents/articles/51546.windows-10-build-1803-registry-tweak-to-disable-microsoft-edge-shortcut-creation-on-desktop.aspx
-Machine_EdgeDesktopLink Hide # Show | Hide
+Machine_EdgeDesktopLink Hide  # Show | Hide
 
+# Control Fax printer
+# Same as Settings -> Devices -> Printers & scanners -> Fax
+Machine_FaxPrinter Uninstall  # Install | Uninstall
+
+# Control Windows Features
+# Same as Control Panel -> Programs and Features -> Turn Windows features on or off
 EnsureWindowsFeature @{
     "TelnetClient" = "Enabled"
     "Microsoft-Hyper-V-All" = "Enabled"
@@ -119,6 +128,7 @@ EnsureWindowsFeature @{
     "SMB1Protocol" = "Disabled"
     "MicrosoftWindowsPowerShellV2Root" = "Disabled"
     "WorkFolders-Client" = "Disabled"
+    "FaxServicesClientPackage" = "Disabled"
 }
 
 # Same as Taskbar context menu -> Show task view button
@@ -241,3 +251,16 @@ User_StickyKeys Disabled  # Enabled | Disabled
 
 # Tune touchpad gesture
 User_TouchPad Simple  # Default | Simple
+
+# Same as Settings -> Devices -> Typing -> Advanced keyboard settings -> Input language hot keys -> Hot keys for input languages
+# See https://winaero.com/blog/change-hotkeys-switch-keyboard-layout-windows-10
+User_LanguageHotKeys Disabled  # Enabled | Disabled
+
+# Same as OneDrive -> Settings -> Settings -> Start OneDrive automatically when I sign in to Windows
+User_OneDrive_AutoStart Disabled  # Enabled | Disabled
+
+# Same as Intel Graphics Settings -> Preferences
+User_IntelGFXTray Hide  # Show | Hide
+
+# Same as Intel Graphics Settings -> Hot Key Manager -> Manage Hot Keys
+User_IntelGFXHotKeys Disabled  # Enabled | Disabled
