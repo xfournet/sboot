@@ -322,6 +322,21 @@ Function Machine_GamingFeatures($Action) {
     }
 }
 
+Function User_StartMenu_Tiles($Action) {
+    & (KeyToValue $Action @{
+        Unpin = {
+            $keyPath = (Get-ItemProperty -Path "Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\*start.tilegrid`$windows.data.curatedtilecollection.tilecollection\Current").PSPath
+            $keyPath = $keyPath.Substring($keyPath.IndexOf("::")+2)
+            EnsureRegistryValue -Path $keyPath -Name "Data" -Type Binary {
+                Param($Data)
+                return ($Data[0..25] + ([byte[]](202,50,0,226,44,1,1,0,0)))
+            }
+            Stop-Process -Name "ShellExperienceHost" -Force -ErrorAction SilentlyContinue
+        }
+        Keep = {}
+    })
+}
+
 Function User_Taskbar_TaskViewButton($Action) {
     EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Type DWORD -Value ( KeyToValue $Action @{
         Show = $null

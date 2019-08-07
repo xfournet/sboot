@@ -87,8 +87,7 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
                 $hasValue = ($null -ne $Value)
             }
         }
-    }
-    else {
+    } else {
         if (IsDryRun) {
             $canWrite = $true
         } else {
@@ -97,12 +96,18 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
         }
     }
 
-    if ($currentValue -ne $Value) {
+    if("Binary" -eq $Type) {
+        $Value = [byte[]] $Value
+        $areDifferent = @(Compare-Object $Value $currentValue -SyncWindow 0).Length -ne 0
+    } else {
+        $areDifferent = ($currentValue -ne $Value)
+    }
+
+    if ($areDifferent) {
         if ($hasValue) {
             if ($null -ne $currentValue) {
                 $msg = "Registry item $Path\$Name value was '$currentValue', set to '$Value'"
-            }
-            else {
+            } else {
                 $msg = "Registry item $Path\$Name value was not existing, created with '$Value'"
             }
 
@@ -113,8 +118,7 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
             } else {
                 LogWarn "Registry item $Path\$Name cannot be updated"
             }
-        }
-        else {
+        } else {
             if ($canWrite) {
                 DoUpdate "Registry item $Path\$Name removed, previous value was '$currentValue'" {
                     $item.DeleteValue($Name)
@@ -123,12 +127,10 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
                 LogWarn "Registry item $Path\$Name cannot be deleted"
             }
         }
-    }
-    else {
+    } else {
         if ($hasValue) {
             LogIdempotent "Registry item $Path\$Name value is already set to '$Value'"
-        }
-        else {
+        } else {
             LogIdempotent "Registry item $Path\$Name is already missing"
         }
     }

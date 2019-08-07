@@ -208,6 +208,10 @@ EnsureWindowsFeature @{
     "FaxServicesClientPackage" = "Disabled"
 }
 
+
+# Remove all tiles from Start menu. This cannot be undone.
+User_StartMenu_Tiles Unpin  # Keep | Unpin
+
 # Same as Taskbar context menu -> Show task view button
 # See https://www.tenforums.com/tutorials/2853-hide-show-task-view-button-taskbar-windows-10-a.html
 User_Taskbar_TaskViewButton Hide  # Show | Hide
