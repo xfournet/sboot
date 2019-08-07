@@ -15,6 +15,9 @@ Machine_FlashInMSBrowsers Disabled  # Enabled | Disabled
 # Same as Settings -> Update & Security -> Windows Security -> Virus & threat protection -> Virus & threat protection settings -> Manage settings -> Exclusion -> Add or remove exclusion
 EnsureWindowsDefenderExclusion "D:\"
 
+# Control nightly wake-up for Automatic Maintenance and Windows Updates
+Machine_WindowsUpdateAutoWakeUp Disabled  # Enabled | Disabled
+
 # Same as Control Panel -> System -> Advanced system settings -> Startup and Recovery -> Settings... -> System failure -> Automatically restart
 # See https://www.tenforums.com/performance-maintenance/92329-how-disable-windows-script-host.html
 Machine_AutoRebootOnCrash Disabled  # Enabled | Disabled

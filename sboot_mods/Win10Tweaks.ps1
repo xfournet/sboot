@@ -28,6 +28,17 @@ Function Machine_FlashInMSBrowsers($Action) {
     })
 }
 
+Function Machine_WindowsUpdateAutoWakeUp($Action) {
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "AUPowerManagement" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 0
+    })
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance" -Name "WakeUp" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 0
+    })
+}
+
 Function Machine_AutoRebootOnCrash($Action) {
     EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl" -Name "AutoReboot" -Type DWORD -Value ( KeyToValue $Action @{
         Enabled = 1
