@@ -17,6 +17,17 @@ Function Machine_WindowsScriptHost($Action) {
     })
 }
 
+Function Machine_FlashInMSBrowsers($Action) {
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Internet Explorer" -Name "DisableFlashInIE" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 1
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\SOFTWARE\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Addons" -Name "FlashPlayerEnabled" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 0
+    })
+}
+
 Function Machine_AutoRebootOnCrash($Action) {
     EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl" -Name "AutoReboot" -Type DWORD -Value ( KeyToValue $Action @{
         Enabled = 1

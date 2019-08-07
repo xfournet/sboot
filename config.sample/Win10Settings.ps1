@@ -8,6 +8,10 @@ Machine_ComputerName $env:ComputerName # $env:ComputerName | "<ComputerName>"
 # See https://www.tenforums.com/performance-maintenance/92329-how-disable-windows-script-host.html
 Machine_WindowsScriptHost Disabled  # Enabled | Disabled
 
+# Control Flash in IE and Edge
+# See https://www.tenforums.com/tutorials/8376-enable-disable-adobe-flash-player-microsoft-edge-windows-10-a.html
+Machine_FlashInMSBrowsers Disabled  # Enabled | Disabled
+
 # Same as Settings -> Update & Security -> Windows Security -> Virus & threat protection -> Virus & threat protection settings -> Manage settings -> Exclusion -> Add or remove exclusion
 EnsureWindowsDefenderExclusion "D:\"
 
