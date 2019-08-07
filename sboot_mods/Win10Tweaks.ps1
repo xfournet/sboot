@@ -231,6 +231,30 @@ Function Machine_EdgeDesktopLink($Action) {
     }
 }
 
+Function Machine_FaxPrinter($Action) {
+    $installed = ($null -ne (Get-Printer -Name "Fax" -ErrorAction SilentlyContinue))
+    & (KeyToValue $Action @{
+        Install = {
+            if($installed) {
+                LogIdempotent "Fax printer is already installed"
+            } else {
+                DoUpdate -RequireAdmin "Fax printer has been installed" {
+                    Add-Printer -Name "Fax" -DriverName "Microsoft Shared Fax Driver" -PortName "SHRFAX:"
+                }
+            }
+        }
+        Uninstall = {
+            if($installed) {
+                DoUpdate -RequireAdmin "Fax printer has been uninstalled" {
+                	Remove-Printer -Name "Fax"
+                }
+            } else {
+                LogIdempotent "Fax printer is already uninstalled"
+            }
+        }
+    })
+}
+
 Function User_Taskbar_TaskViewButton($Action) {
     EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Type DWORD -Value ( KeyToValue $Action @{
         Show = $null
