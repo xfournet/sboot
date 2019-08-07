@@ -345,6 +345,34 @@ Function EnsureWindowsFeature($Features) {
     }
 }
 
+Function EnsureWindowsApps($Apps) {
+    foreach ($appName in $Apps.Keys) {
+        $shouldBeInstalled = KeyToValue $Apps[$appName] @{
+            Installed = $true
+            Uninstalled = $false
+        }
+        $appInstalled = ($null -ne (Get-AppxPackage "$appName"))
+
+        if ($shouldBeInstalled) {
+            if ($appInstalled) {
+                LogIdempotent "App '$appName' is already installed"
+            } else {
+                DoUpdate "App '$appName' has been installed" {
+                    Get-AppxPackage -AllUsers "$appName" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+                }
+            }
+        } else {
+            if ($appInstalled) {
+                DoUpdate "App '$appName' has been uninstalled" {
+                    Get-AppxPackage "$appName" | Remove-AppxPackage
+                }
+            } else {
+                LogIdempotent "App '$appName' is already uninstalled"
+            }
+        }
+    }
+}
+
 Function EnsureWindowsDefenderExclusion($ExclusionPath) {
     $exclusions = $(Get-MpPreference).ExclusionPath
     if(($null -eq $exclusions) -or ([Array]::IndexOf($exclusions, $ExclusionPath) -eq -1)) {

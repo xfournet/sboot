@@ -112,7 +112,77 @@ Machine_EdgeDesktopLink Hide  # Show | Hide
 
 # Control Fax printer
 # Same as Settings -> Devices -> Printers & scanners -> Fax
-Machine_FaxPrinter Uninstall  # Install | Uninstall
+Machine_FaxPrinter Uninstalled  # Installed | Uninstalled
+
+# Control Xbox application and game mode
+# Same as Settings -> Gaming -> Game Mode -> Game Mode
+# Same as Settings -> Gaming -> Game Mode -> Game Mode
+# See https://www.tenforums.com/tutorials/8637-turn-off-game-bar-windows-10-a.html
+Machine_GamingFeatures Disabled  # Enabled | Disabled
+
+# Control Apps
+# Same as Settings -> Apps
+EnsureWindowsApps @{
+    "Microsoft.3DBuilder" = "Uninstalled"
+    "Microsoft.AppConnector" = "Uninstalled"
+    "Microsoft.BingFinance" = "Uninstalled"
+    "Microsoft.BingFoodAndDrink" = "Uninstalled"
+    "Microsoft.BingHealthAndFitness" = "Uninstalled"
+    "Microsoft.BingMaps" = "Uninstalled"
+    "Microsoft.BingNews" = "Uninstalled"
+    "Microsoft.BingSports" = "Uninstalled"
+    "Microsoft.BingTranslator" = "Uninstalled"
+    "Microsoft.BingTravel" = "Uninstalled"
+    "Microsoft.BingWeather" = "Uninstalled"
+    "Microsoft.CommsPhone" = "Uninstalled"
+    "Microsoft.ConnectivityStore" = "Uninstalled"
+    "Microsoft.FreshPaint" = "Uninstalled"
+    "Microsoft.GetHelp" = "Uninstalled"
+    "Microsoft.Getstarted" = "Uninstalled"
+    "Microsoft.HelpAndTips" = "Uninstalled"
+    "Microsoft.Media.PlayReadyClient.2" = "Uninstalled"
+    "Microsoft.Messaging" = "Uninstalled"
+    "Microsoft.Microsoft3DViewer" = "Uninstalled"
+    "Microsoft.MicrosoftOfficeHub" = "Uninstalled"
+    "Microsoft.MicrosoftPowerBIForWindows" = "Uninstalled"
+    "Microsoft.MicrosoftSolitaireCollection" = "Uninstalled"
+    "Microsoft.MicrosoftStickyNotes" = "Uninstalled"
+    "Microsoft.MinecraftUWP" = "Uninstalled"
+    "Microsoft.MixedReality.Portal" = "Uninstalled"
+    "Microsoft.MoCamera" = "Uninstalled"
+    # "Microsoft.MSPaint" = "Uninstalled"
+    "Microsoft.NetworkSpeedTest" = "Uninstalled"
+    "Microsoft.OfficeLens" = "Uninstalled"
+    "Microsoft.Office.OneNote" = "Uninstalled"
+    "Microsoft.Office.Sway" = "Uninstalled"
+    "Microsoft.OneConnect" = "Uninstalled"
+    "Microsoft.People" = "Uninstalled"
+    "Microsoft.Print3D" = "Uninstalled"
+    "Microsoft.Reader" = "Uninstalled"
+    "Microsoft.RemoteDesktop" = "Uninstalled"
+    "Microsoft.SkypeApp" = "Uninstalled"
+    "Microsoft.Todos" = "Uninstalled"
+    "Microsoft.Wallet" = "Uninstalled"
+    "Microsoft.WebMediaExtensions" = "Uninstalled"
+    "Microsoft.Whiteboard" = "Uninstalled"
+    "Microsoft.WindowsAlarms" = "Uninstalled"
+    # "Microsoft.WindowsCamera" = "Uninstalled"
+    "microsoft.windowscommunicationsapps" = "Uninstalled"
+    "Microsoft.WindowsFeedbackHub" = "Uninstalled"
+    "Microsoft.WindowsMaps" = "Uninstalled"
+    "Microsoft.WindowsPhone" = "Uninstalled"
+    # "Microsoft.Windows.Photos" = "Uninstalled"
+    "Microsoft.WindowsReadingList" = "Uninstalled"
+    "Microsoft.WindowsScan" = "Uninstalled"
+    # "Microsoft.WindowsSoundRecorder" = "Uninstalled"
+    "Microsoft.WinJS.1.0" = "Uninstalled"
+    "Microsoft.WinJS.2.0" = "Uninstalled"
+    "Microsoft.YourPhone" = "Uninstalled"
+    "Microsoft.ZuneMusic" = "Uninstalled"
+    "Microsoft.ZuneVideo" = "Uninstalled"
+    "Microsoft.Advertising.Xaml" = "Uninstalled"
+}
+
 
 # Control Windows Features
 # Same as Control Panel -> Programs and Features -> Turn Windows features on or off

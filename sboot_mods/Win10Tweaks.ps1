@@ -234,7 +234,7 @@ Function Machine_EdgeDesktopLink($Action) {
 Function Machine_FaxPrinter($Action) {
     $installed = ($null -ne (Get-Printer -Name "Fax" -ErrorAction SilentlyContinue))
     & (KeyToValue $Action @{
-        Install = {
+        Installed = {
             if($installed) {
                 LogIdempotent "Fax printer is already installed"
             } else {
@@ -243,7 +243,7 @@ Function Machine_FaxPrinter($Action) {
                 }
             }
         }
-        Uninstall = {
+        Uninstalled = {
             if($installed) {
                 DoUpdate -RequireAdmin "Fax printer has been uninstalled" {
                 	Remove-Printer -Name "Fax"
@@ -253,6 +253,51 @@ Function Machine_FaxPrinter($Action) {
             }
         }
     })
+}
+
+Function Machine_GamingFeatures($Action) {
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 0
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 0
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\System\GameConfigStore" -Name "GameDVR_Enabled" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = 1
+        Disabled = 0
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\System\GameConfigStore" -Name "GameDVR_DXGIHonorFSEWindowsCompatible" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = 0
+        Disabled = 1
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\System\GameConfigStore" -Name "GameDVR_FSEBehavior" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = $null
+        Disabled = 2
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\System\GameConfigStore" -Name "GameDVR_FSEBehaviorMode" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = 0
+        Disabled = 2
+    })
+    EnsureRegistryValue -Path "HKEY_CURRENT_USER\System\GameConfigStore" -Name "GameDVR_HonorUserFSEBehaviorMode" -Type DWORD -Value ( KeyToValue $Action @{
+        Enabled = 0
+        Disabled = 1
+    })
+
+    $installState = KeyToValue $Action @{
+        Enabled = "Installed"
+        Disabled = "Uninstalled"
+    }
+
+    EnsureWindowsApps @{
+        "Microsoft.XboxApp" = $installState
+        "Microsoft.XboxIdentityProvider" = $installState
+        "Microsoft.XboxSpeechToTextOverlay" = $installState
+        "Microsoft.XboxGameOverlay" = $installState
+        "Microsoft.XboxGamingOverlay" = $installState
+        "Microsoft.Xbox.TCUI" = $installState
+    }
 }
 
 Function User_Taskbar_TaskViewButton($Action) {
