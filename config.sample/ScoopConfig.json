@@ -22,15 +22,6 @@
       }
     },
     {
-      "app": "filezilla"
-    },
-    {
-      "app": "git",
-      "parameters": {
-        "overwriteUserGitconfig": false
-      }
-    },
-    {
       "app": "hxd"
     },
     {
@@ -43,10 +34,7 @@
       "app": "notepadplusplus"
     },
     {
-      "app": "vim",
-      "parameters": {
-        "overwriteUserVimrc": false
-      }
+      "app": "vim"
     },
     {
       "app": "winmerge"
