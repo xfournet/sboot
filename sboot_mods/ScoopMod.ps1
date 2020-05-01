@@ -31,7 +31,16 @@ Function EnsureScoopConfig([String]$ScoopConfig) {
         }
     }
     foreach ($extraApp in (installed_apps($false) | Where-Object { $_ -notin $allConfiguredApps })) {
-        LogWarn "Application '$extraApp' is not referenced in sboot configuration"
+        $version = current_version $extraApp $false
+        $install_info = install_info $extraApp $version $false
+        $bucket = $install_info.bucket
+        if ($bucket -eq "main") {
+            $bucket = ""
+        } else {
+            $bucket = "$bucket/"
+        }
+
+        LogWarn "Application '$bucket$extraApp' is not referenced in sboot configuration"
     }
 
     foreach ($extSpec in $scoopConf.exts) {
