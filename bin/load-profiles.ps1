@@ -4,5 +4,5 @@ Get-ChildItem -Filter "*.ps1" "$PSScriptRoot\..\profile" | ForEach-Object {
     $stopwatch.Start()
     . $_.FullName
     $stopwatch.Stop()
-    $sboot_load_profiles_timing += "Profile $($_.Name) took $($stopwatch.ElapsedMilliseconds) ms"
+    $sboot_load_profiles_timing += "Profile $( $_.Name ) took $( $stopwatch.ElapsedMilliseconds ) ms"
 }

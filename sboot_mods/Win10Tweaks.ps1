@@ -263,7 +263,7 @@ Function Machine_FaxPrinter($Action) {
     $installed = ($null -ne (Get-Printer -Name "Fax" -ErrorAction SilentlyContinue))
     & (KeyToValue $Action @{
         Installed = {
-            if($installed) {
+            if ($installed) {
                 LogIdempotent "Fax printer is already installed"
             } else {
                 DoUpdate -RequireAdmin "Fax printer has been installed" {
@@ -272,9 +272,9 @@ Function Machine_FaxPrinter($Action) {
             }
         }
         Uninstalled = {
-            if($installed) {
+            if ($installed) {
                 DoUpdate -RequireAdmin "Fax printer has been uninstalled" {
-                	Remove-Printer -Name "Fax"
+                    Remove-Printer -Name "Fax"
                 }
             } else {
                 LogIdempotent "Fax printer is already uninstalled"
@@ -332,14 +332,14 @@ Function User_StartMenu_Tiles($Action) {
     & (KeyToValue $Action @{
         Unpin = {
             $keyPath = (Get-ItemProperty -Path "Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\*start.tilegrid`$windows.data.curatedtilecollection.tilecollection\Current").PSPath
-            $keyPath = $keyPath.Substring($keyPath.IndexOf("::")+2)
+            $keyPath = $keyPath.Substring($keyPath.IndexOf("::") + 2)
             EnsureRegistryValue -Path $keyPath -Name "Data" -Type Binary {
                 Param($Data)
-                return ($Data[0..25] + ([byte[]](202,50,0,226,44,1,1,0,0)))
+                return ($Data[0..25] + ([byte[]](202, 50, 0, 226, 44, 1, 1, 0, 0)))
             }
             Stop-Process -Name "ShellExperienceHost" -Force -ErrorAction SilentlyContinue
         }
-        Keep = {}
+        Keep = { }
     })
 }
 

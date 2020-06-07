@@ -1,4 +1,4 @@
-. "$(sboot_mod "Win10Tweaks")"
+. "$( sboot_mod "Win10Tweaks" )"
 
 # Same as Settings -> System -> About -> Rename this PC
 # See https://www.tenforums.com/tutorials/5174-change-computer-name-windows-10-a.html

@@ -96,8 +96,8 @@ Function EnsureRegistryValue([String]$Path, [String]$Name, [String]$Type, $Value
         }
     }
 
-    if("Binary" -eq $Type) {
-        $Value = [byte[]] $Value
+    if ("Binary" -eq $Type) {
+        $Value = [byte[]]$Value
         $areDifferent = @(Compare-Object $Value $currentValue -SyncWindow 0).Length -ne 0
     } else {
         $areDifferent = ($currentValue -ne $Value)
@@ -358,9 +358,9 @@ Function EnsureWindowsCapability($Features) {
         $capabilityInstalled = $capability.State -eq "Installed"
 
         $desiredState = $Features[$capabilityName]
-        if($null -eq $desiredState) {
-            if($capabilityName.IndexOf('~') -gt 0) {
-                $desiredState = $Features[$capabilityName.Substring(0, $capabilityName.IndexOf('~'))]
+        if ($null -eq $desiredState) {
+            if ($capabilityName.IndexOf('~') -gt 0) {
+                $desiredState = $Features[$capabilityName.Substring(0,$capabilityName.IndexOf('~'))]
             }
         }
         if ($null -ne $desiredState) {
@@ -403,7 +403,7 @@ Function EnsureWindowsApps($Apps) {
                 LogIdempotent "App '$appName' is already installed"
             } else {
                 DoUpdate "App '$appName' has been installed" {
-                    Get-AppxPackage -AllUsers "$appName" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+                    Get-AppxPackage -AllUsers "$appName" | ForEach-Object { Add-AppxPackage -DisableDevelopmentMode -Register "$( $_.InstallLocation )\AppXManifest.xml" }
                 }
             }
         } else {
@@ -419,8 +419,8 @@ Function EnsureWindowsApps($Apps) {
 }
 
 Function EnsureWindowsDefenderExclusion($ExclusionPath) {
-    $exclusions = $(Get-MpPreference).ExclusionPath
-    if(($null -eq $exclusions) -or ([Array]::IndexOf($exclusions, $ExclusionPath) -eq -1)) {
+    $exclusions = $( Get-MpPreference ).ExclusionPath
+    if (($null -eq $exclusions) -or ([Array]::IndexOf($exclusions, $ExclusionPath) -eq -1)) {
         DoUpdate -RequireAdmin "Windows defender exclusions has been updated to exclude '$ExclusionPath'" {
             Add-MpPreference -ExclusionPath "$ExclusionPath"
         }
@@ -468,7 +468,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
                     & "$env:COMSPEC" /c rmdir $LinkPath
 
                     # create the link to the new target path
-                    if($isDirectory) {
+                    if ($isDirectory) {
                         & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
                         attrib $currentdir +R /L
                     } else {
@@ -481,7 +481,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
         }
     } else {
         DoUpdate "Link created from '$LinkPath' to '$TargetPath'" {
-            if($isDirectory) {
+            if ($isDirectory) {
                 & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
                 attrib $currentdir +R /L
             } else {
