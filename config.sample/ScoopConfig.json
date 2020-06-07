@@ -37,6 +37,9 @@
       "app": "vim"
     },
     {
+      "app": "windows-terminal"
+    },
+    {
       "app": "winmerge"
     }
   ]

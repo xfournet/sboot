@@ -454,24 +454,39 @@ Function EnsureShortCut([String]$Shortcut, [String]$Target, [String]$Icon) {
     }
 }
 
-Function EnsureJunction([String]$JunctionPath, [String]$TargetPath) {
-    $junctionItem = Get-Item -LiteralPath $JunctionPath -ErrorAction:SilentlyContinue
-    if ($junctionItem) {
-        if ($junctionItem.LinkType -eq "Junction") {
-            if ($junctionItem.Target -eq $TargetPath) {
-                LogIdempotent "Junction '$JunctionPath' is already targeting '$TargetPath'"
+Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
+    $linkItem = Get-Item -LiteralPath $LinkPath -ErrorAction:SilentlyContinue
+    $isDirectory = (Get-Item $TargetPath) -is [System.IO.DirectoryInfo]
+    if ($linkItem) {
+        if ($linkItem.LinkType -eq "Junction") {
+            if ($linkItem.Target -eq $TargetPath) {
+                LogIdempotent "Link '$LinkPath' is already targeting '$TargetPath'"
             } else {
-                DoUpdate "Changing junction '$JunctionPath' target from '$( $junctionItem.Target )' to '$TargetPath'" {
-                    junction /d "$JunctionPath"
-                    junction "$JunctionPath" "$TargetPath"
+                DoUpdate "Changing link '$LinkPath' target from '$( $linkItem.Target )' to '$TargetPath'" {
+                    # remove the link
+                    attrib -R /L $LinkPath
+                    & "$env:COMSPEC" /c rmdir $LinkPath
+
+                    # create the link to the new target path
+                    if($isDirectory) {
+                        & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
+                        attrib $currentdir +R /L
+                    } else {
+                        & "$env:COMSPEC" /c mklink /h $LinkPath $TargetPath | out-null
+                    }
                 }
             }
         } else {
-            LogWarn "'$JunctionPath' already exist but is not a junction, cannot process it"
+            LogWarn "'$LinkPath' already exist but is not a junction link, cannot process it"
         }
     } else {
-        DoUpdate "Junction created from '$JunctionPath' to '$TargetPath'" {
-            junction "$JunctionPath" "$TargetPath"
+        DoUpdate "Link created from '$LinkPath' to '$TargetPath'" {
+            if($isDirectory) {
+                & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
+                attrib $currentdir +R /L
+            } else {
+                & "$env:COMSPEC" /c sudo mklink $LinkPath $TargetPath | out-null
+            }
         }
     }
 }

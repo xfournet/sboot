@@ -5,7 +5,7 @@ Function AppInstalled([String]$AppDir) {
     $kseJreDir = "$AppDir\jre"
     $javaHome = Split-Path -Parent (Split-Path -Parent (Get-Command java.exe).Path)
     if ($javaHome) {
-        EnsureJunction -JunctionPath $kseJreDir -TargetPath $javaHome
+        EnsureLink -LinkPath $kseJreDir -TargetPath $javaHome
     } else {
         LogWarn "java.exe has not be found in PATH"
     }
