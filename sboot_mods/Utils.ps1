@@ -480,6 +480,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
             LogWarn "'$LinkPath' already exist but is not a junction link, cannot process it"
         }
     } else {
+        EnsureDirectoryExist -Path (Split-Path -Parent $LinkPath)
         DoUpdate "Link created from '$LinkPath' to '$TargetPath'" {
             if ($isDirectory) {
                 & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
@@ -531,4 +532,3 @@ Function EnsureDirectoryExist([String]$Path) {
         }
     }
 }
-
