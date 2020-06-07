@@ -94,10 +94,10 @@ Function Machine_LocalAccountSecurityQuestions($Action) {
 }
 
 Function Machine_WindowsUpdateP2PDelivery($Action) {
-    EnsureRegistryValue -Path "HKEY_USERS\S-1-5-20\Software\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Settings" -Name "DownloadMode" -Type DWORD -Value ( KeyToValue $Action @{
+    EnsureRegistryValue -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization" -Name "DODownloadMode" -Type DWORD -Value ( KeyToValue $Action @{
         LocalNetworkOnly = $null
         LocalNetworkAndInternet = 3
-        Disabled = 0
+        Disabled = 100
     })
 }
 
@@ -169,6 +169,12 @@ Function Machine_RemoteAssistance($Action) {
         Enabled = $true
         Disabled = $false
     })
+    EnsureWindowsCapability @{
+        "App.Support.QuickAssist" = ( KeyToValue $Action @{
+            Enabled = "Installed"
+            Disabled = "NotPresent"
+        })
+    }
 }
 
 Function Machine_RemoteDesktop($Action) {

@@ -42,7 +42,7 @@ Machine_LocalAccountSecurityQuestions Disabled  # Enabled | Disabled
 
 # Same as Settings -> Update & Security -> Windows Update -> Advanced options -> Delivery Optimization -> Allow downloads from other PCs
 # See https://www.tenforums.com/tutorials/105329-specify-how-windows-store-app-updates-downloaded-windows-10-a.html
-Machine_WindowsUpdateP2PDelivery Disabled  # LocalNetworkOnly | LocalNetworkAndInternet | Disabled
+Machine_WindowsUpdateP2PDelivery LocalNetworkOnly  # LocalNetworkOnly | LocalNetworkAndInternet | Disabled
 
 # Same as Control Panel -> Date and Time -> Internet Time -> Change settings... -> Server
 # See https://www.tenforums.com/tutorials/6410-synchronize-clock-internet-time-server-windows-10-a.html
@@ -194,18 +194,28 @@ EnsureWindowsApps @{
 # Control Windows Features
 # Same as Control Panel -> Programs and Features -> Turn Windows features on or off
 EnsureWindowsFeature @{
-    "TelnetClient" = "Enabled"
     "Microsoft-Hyper-V-All" = "Enabled"
     "Containers" = "Enabled"
     "Containers-DisposableClientVM" = "Enabled"
     "Microsoft-Windows-Subsystem-Linux" = "Enabled"
+    "VirtualMachinePlatform" = "Enabled"
 
+    "MediaPlayback" = "Disabled"
     "WindowsMediaPlayer" = "Disabled"
+    "Internet-Explorer-Optional-amd64" = "Disabled"
     "Printing-XPSServices-Features" = "Disabled"
-    "SMB1Protocol" = "Disabled"
     "MicrosoftWindowsPowerShellV2Root" = "Disabled"
     "WorkFolders-Client" = "Disabled"
-    "FaxServicesClientPackage" = "Disabled"
+}
+
+# Control Optional Features
+# Same as Settings -> Apps -> Optional features
+EnsureWindowsCapability @{
+    "Media.WindowsMediaPlayer" = "NotPresent"
+    "Browser.InternetExplorer" = "NotPresent"
+    "Print.Fax.Scan" = "NotPresent"
+    "OpenSSH.Client" = "NotPresent"
+    "Microsoft.Windows.WordPad" = "NotPresent"
 }
 
 

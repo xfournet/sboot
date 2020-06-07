@@ -347,6 +347,49 @@ Function EnsureWindowsFeature($Features) {
     }
 }
 
+Function EnsureWindowsCapability($Features) {
+    if (!(IsAdmin)) {
+        LogWarn "Windows capability management requires administrator privileges"
+        return
+    }
+
+    foreach ($capability in Get-WindowsCapability -Online) {
+        $capabilityName = $capability.Name
+        $capabilityInstalled = $capability.State -eq "Installed"
+
+        $desiredState = $Features[$capabilityName]
+        if($null -eq $desiredState) {
+            if($capabilityName.IndexOf('~') -gt 0) {
+                $desiredState = $Features[$capabilityName.Substring(0, $capabilityName.IndexOf('~'))]
+            }
+        }
+        if ($null -ne $desiredState) {
+            $ensureInstalled = KeyToValue $desiredState @{
+                Installed = $true
+                NotPresent = $false
+            }
+
+            if ($ensureInstalled) {
+                if ($capabilityInstalled) {
+                    LogIdempotent "Windows capability '$capabilityName' is already installed"
+                } else {
+                    DoUpdate "Windows capability '$capabilityName' has been installed" {
+                        Add-WindowsCapability -Online -Name $capabilityName | Out-Null
+                    }
+                }
+            } else {
+                if ($capabilityInstalled) {
+                    DoUpdate "Windows capability '$capabilityName' has been uninstalled" {
+                        Remove-WindowsCapability -Online -Name $capabilityName | Out-Null
+                    }
+                } else {
+                    LogIdempotent "Windows capability '$capabilityName' is already uninstalled"
+                }
+            }
+        }
+    }
+}
+
 Function EnsureWindowsApps($Apps) {
     foreach ($appName in $Apps.Keys) {
         $shouldBeInstalled = KeyToValue $Apps[$appName] @{
