@@ -458,7 +458,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
     $linkItem = Get-Item -LiteralPath $LinkPath -ErrorAction:SilentlyContinue
     $isDirectory = (Get-Item $TargetPath) -is [System.IO.DirectoryInfo]
     if ($linkItem) {
-        if ($linkItem.LinkType -eq "Junction") {
+        if ($linkItem.LinkType -eq "Junction" -or $linkItem.LinkType -eq "SymbolicLink") {
             if ($linkItem.Target -eq $TargetPath) {
                 LogIdempotent "Link '$LinkPath' is already targeting '$TargetPath'"
             } else {
