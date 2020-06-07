@@ -1,6 +1,6 @@
-$scoopTarget = 'D:\scoop'
 $changeExecutionPolicy = (Get-ExecutionPolicy) -gt 'RemoteSigned' -or (Get-ExecutionPolicy) -eq 'ByPass'
 
+$scoopTarget = Read-Host "Enter your Scoop installation directory (e.g. D:\scoop)"
 $scoopPersistUrl = Read-Host "Enter your Scoop persist directory's Git repository URL (e.g. https://github.com/xfournet/scoop-persist.git)"
 $scoopPersistBranch = Read-Host "Enter your Scoop persist directory's Git repository branch name (e.g. master)"
 
