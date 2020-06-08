@@ -470,7 +470,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
                     # create the link to the new target path
                     if ($isDirectory) {
                         & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
-                        attrib $currentdir +R /L
+                        attrib $LinkPath +R /L
                     } else {
                         & "$env:COMSPEC" /c mklink /h $LinkPath $TargetPath | out-null
                     }
@@ -484,7 +484,7 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
         DoUpdate "Link created from '$LinkPath' to '$TargetPath'" {
             if ($isDirectory) {
                 & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
-                attrib $currentdir +R /L
+                attrib $LinkPath +R /L
             } else {
                 & "$env:COMSPEC" /c sudo mklink $LinkPath $TargetPath | out-null
             }
