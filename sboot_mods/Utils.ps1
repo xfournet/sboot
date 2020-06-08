@@ -463,16 +463,16 @@ Function EnsureLink([String]$LinkPath, [String]$TargetPath) {
                 LogIdempotent "Link '$LinkPath' is already targeting '$TargetPath'"
             } else {
                 DoUpdate "Changing link '$LinkPath' target from '$( $linkItem.Target )' to '$TargetPath'" {
-                    # remove the link
-                    attrib -R /L $LinkPath
-                    & "$env:COMSPEC" /c rmdir $LinkPath
-
-                    # create the link to the new target path
                     if ($isDirectory) {
+                        attrib -R /L $LinkPath
+                        & "$env:COMSPEC" /c rmdir $LinkPath
+
                         & "$env:COMSPEC" /c mklink /j $LinkPath $TargetPath | out-null
                         attrib $LinkPath +R /L
                     } else {
-                        & "$env:COMSPEC" /c mklink /h $LinkPath $TargetPath | out-null
+                        & "$env:COMSPEC" /c del $LinkPath
+
+                        & "$env:COMSPEC" /c sudo mklink $LinkPath $TargetPath | out-null
                     }
                 }
             }
