@@ -31,7 +31,7 @@ Function EnsureScoopConfig([String]$ScoopConfig) {
         }
     }
     foreach ($extraApp in (installed_apps($false) | Where-Object { $_ -notin $allConfiguredApps })) {
-        $version = current_version $extraApp $false
+        $version = Select-CurrentVersion $extraApp $false
         $install_info = install_info $extraApp $version $false
         $bucket = $install_info.bucket
         if ($bucket -eq "main") {
@@ -81,7 +81,7 @@ Function EnsureScoopApp($appSpec) {
         if (installed $appName) {
             LogIdempotent "Scoop app '$( $appName )' is already installed"
 
-            $ver = current_version $appName $false
+            $ver = Select-CurrentVersion $appName $false
             $install_info = install_info $appName $ver $false
             if ($install_info.bucket -ne $appBucket) {
                 LogWarn "Scoop app '$appName' is from bucket '$( $install_info.bucket )' but declared in bucket '$appBucket' in sboot"
